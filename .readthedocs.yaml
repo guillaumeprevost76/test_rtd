@@ -15,7 +15,7 @@ build:
       - pip install poetry
       - poetry config virtualenvs.create false
     post_install:
-      - pip install --upgrade sphinx==6.2.1
+      # - pip install --upgrade sphinx==6.2.1
       - poetry install
 
 # Build documentation in the docs/ directory with Sphinx
