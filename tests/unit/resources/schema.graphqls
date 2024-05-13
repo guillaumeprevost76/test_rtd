@@ -1,0 +1,2235 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+directive @preview(reason: String = "This endpoint is in beta version, it may change in future versions") on FIELD_DEFINITION | ENUM_VALUE
+
+type Query {
+  # Get platform details.
+  platform: Platform
+
+  # List projects in platform.
+  #
+  # You can only list projects you belong to and projects you have created.
+  #
+  # Arguments are not implemented yet and may be removed or changed in future releases, which is why they are deprecated.
+  projects(
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    search: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    first: Int,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    skip:Int
+  ): [Project!]
+
+  # Get a project's details from its UUID. Project details include the pipelines, jobs and apps contained in the project.
+  #
+  # You can only get a project's details if you have at least the viewer role in this project or in all projects.
+  #
+  project(id: UUID!): Project
+
+  # Get a project's details from its name. Project details include the pipelines, jobs and apps contained in the project.
+  #
+  # You can only get a project's details if you have at least the viewer role in this project or in all projects.
+  #
+  projectByName(name: String!): Project
+
+  # List jobs in a given project.
+  #
+  # The list can be filtered by job category or technology.
+  #
+  # You can only list jobs if you have at least the viewer role in this project or in all projects.
+  jobs(projectId: UUID!, category: String, technologyId: UUID): [Job!]
+
+  # Get a job's details from its UUID.
+  #
+  # You can only get a job's details if you have at least the viewer role in the project associated to the job or in all projects.
+  job(id: UUID!): Job
+
+  # Get a job's details from its projectId and alias.
+  #
+  # You can only get a job's details if you have at least the viewer role in the project associated to the job or in all projects.
+  jobByAlias(projectId: UUID!, alias: String!): Job
+
+  # List webApps in a given project.
+  #
+  # You can only list webApps if you have at least the viewer role in this project or in all projects.
+  labWebApps(projectId: UUID!): [Job!] @deprecated(reason: "Use project(id: UUID!).apps")
+
+  # Get a webApp's details from its UUID.
+  #
+  # You can only get a webApp's details if you have at least the viewer role in the project associated to the webApp or in all projects.
+  labWebApp(id: UUID!): Job @deprecated(reason: "Use app(id: UUID!): App")
+
+  # Get an app's details from its UUID.
+  #
+  # You can only get an app's details if you have at least the viewer role in the project associated to the app or in all projects.
+  app(id: UUID!): App
+
+  # Get app history statuses and their record dates.
+  appHistoryStatuses(appHistoryId: UUID!, versionNumber: Int!, startTime: DateTime!, limit: Int): [StatusWithRecordAt]
+
+  # Get statuses count of given app version.
+  countAppHistoryStatuses(appHistoryId: UUID!, versionNumber: Int!, startTime: DateTime!): Int
+
+  # Get app stats (uptime and downtime percentages and recovered count).
+  appStats(appHistoryId: UUID!, versionNumber: Int!, startTime: DateTime!): AppStats
+
+  # Get an volume's details from its UUID.
+  #
+  # You can only get an volume's details if you have at least the viewer role in the project associated to the volume or in all projects.
+  volume(id: UUID!): Volume
+
+  # List environment variables in a given project.
+  #
+  # You can only list environment variables if you have at least the viewer role in this project or in all projects.
+  #
+  # Several optional arguments are not yet implemented and may be removed or changed in future versions, so they are deprecated.
+  projectEnvironmentVariables(
+    projectId: UUID!,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    search: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    first: Int,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    skip:Int
+  ): [EnvironmentVariable!]
+
+  # This deprecated endpoint allows to retrieve a list environment variables of a specific job.
+  #
+  # You can only list environment variables if you have at least the viewer role in the project associated to the job or in all projects.
+  #
+  # Several optional arguments are not yet implemented and may be removed or changed in future versions, so they are deprecated.
+  jobEnvironmentVariables(
+    # Argument is deprecated : may be removed or changed in future releases
+    jobId: UUID!,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    search: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    first: Int,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    skip:Int
+  ): [EnvironmentVariable!]
+
+  # List environment variables of a specific pipeline. Include all variables usable by this pipeline.
+  #
+  # You can only list environment variables if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  pipelineEnvironmentVariables(
+    pipelineId: UUID!,
+    # Allows to get only variables in the scope specified in input. By default if no parameter is specified, all scopes are include.
+    scope: EnvVarScope
+  ): [EnvironmentVariable!]
+
+  # List global environment variables.
+  #
+  # You can only list global environment variables if you have a creator role.
+  #
+  # Several optional arguments are not yet implemented and may be removed or changed in future versions, so they are deprecated.
+  globalEnvironmentVariables(
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    search: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    first: Int,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    skip:Int
+  ): [EnvironmentVariable!]
+
+  # List environment variables of a specific app. Include all variables usable by this app.
+  #
+  # You can only list environment variables if you have at least the viewer role in the project associated to the app or in all projects.
+  appEnvironmentVariables(
+    appId: UUID!,
+    # Allows to get only variables in the scope specified in input. By default if no parameter is specified, all scopes are include.
+    scope: EnvVarScope
+  ): [EnvironmentVariable!]
+
+  # List technologies, grouped by category, in a given project by providing its UUID. In addition, technologies can be filtered by category.
+  #
+  # You can only list technologies if you have at least the viewer role in the project or in all projects.
+  technologiesByCategory(projectId: UUID!, jobCategory: String): [TechnologyByCategory!]
+  @deprecated(reason: "Use project(id: UUID!).technologiesByCategory")
+
+  # List app technologies in a given project by providing its UUID.
+  #
+  # You can only list app technologies if you have at least the viewer role in the project or in all projects.
+  appTechnologies(projectId: UUID!): [Technology!] @deprecated(reason: "Use project(id: UUID!).appTechnologies")
+
+  # List logs of a job instance by providing its UUID.
+  #
+  # You can only list logs if you have at least the viewer role in the project or in all projects.
+  logs(jobInstanceID: UUID!, limit: Int, skip: Int, stream: LogStream): Logs
+  @deprecated(reason: "Use filteredLogs(jobInstanceID: UUID!, limit: Int, skip: Int, streams: [LogStream]!)")
+
+  # Count logs of a job instance by providing its UUID.
+  #
+  # You can only count logs if you have at least the viewer role in the project or in all projects.
+  countLogs(jobInstanceID: UUID!, stream: LogStream): Int @deprecated(reason: "Use countFilteredLogs(jobInstanceID: UUID!, streams: [LogStream]!)")
+
+  # List logs of a job instance by providing its UUID and expected streams.
+  #
+  # You can only list logs if you have at least the viewer role in the project or in all projects.
+  filteredLogs(jobInstanceID: UUID!, limit: Int, skip: Int, streams: [LogStream]!): Logs
+
+  # Count logs of a job instance by providing its UUID and expected streams.
+  #
+  # You can only count logs if you have at least the viewer role in the project or in all projects.
+  countFilteredLogs(jobInstanceID: UUID!, streams: [LogStream]!): Int
+
+  # List logs of an app execution by providing its UUID.
+  #
+  # You can only list logs if you have at least the viewer role in the project or in all projects.
+  appLogs(appId: UUID!, appExecutionId: UUID!, limit: Int, skip: Int, stream: LogStream, recordAt: String): AppLogs
+
+  # Count logs of an app execution by providing its UUID.
+  #
+  # You can only count logs if you have at least the viewer role in the project or in all projects.
+  countAppLogs(appId: UUID!, appExecutionId: UUID!, stream: LogStream): Int
+
+  # List logs of a condition instance by providing its UUID and its project's UUID and expected streams.
+  #
+  # You can only list logs if you have at least the viewer role in the project or in all projects.
+  conditionPipelineFilteredLogs(conditionInstanceID: UUID!, projectID: UUID!, limit: Int, skip: Int, streams: [LogStream]!): Logs
+
+  # List logs of a condition instance by providing its node UUID, its pipeline instance UUID and its project's UUID and expected streams.
+  #
+  # You can only list logs if you have at least the viewer role in the project or in all projects.
+  conditionPipelineByNodeIdFilteredLogs(pipelineInstanceID: UUID!, conditionNodeID: UUID!, projectID: UUID!, limit: Int, skip: Int, streams: [LogStream]!): Logs
+
+  # Count logs of a condition instance by providing its UUID and its project's UUID and expected streams.
+  #
+  # You can only count logs if you have at least the viewer role in the project or in all projects.
+  conditionPipelineCountFilteredLogs(conditionInstanceID: UUID!, projectID: UUID!, streams: [LogStream]!): Int
+
+  # Get job count by category in a project by providing its UUID.
+  #
+  # You can only get jobs count if you have at least the viewer role in the project or in all projects.
+  #
+  # Several optional arguments are not yet implemented and may be removed or changed in future versions, so they are deprecated.
+  countJobs(
+    projectId: UUID!,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    search: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    jobCategory: String,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases
+    technologyId: UUID
+  ): [JobsCountByCategory]
+
+  # Get app count in a project by providing its UUID.
+  #
+  # You can only get apps count if you have at least the viewer role in the project or in all projects.
+  countApps(projectId: UUID!): [AppsCountByTechnology]
+
+  # List job categories.
+  #
+  # You can only list jobs categories if you have project creator role.
+  jobCategories: [String!]!
+
+  # Get a job instance's details by providing its UUID.
+  #
+  # You can only get a job instance if you have at least the viewer role in the project associated to the job instance or in all projects.
+  jobInstance(id: UUID!): JobInstance
+
+  # Count a job instance by Selector with jobId parent.
+  countJobInstancesBySelector(jobId: UUID!): [JobInstanceSelectorCount!]
+
+  # Count job instances with startTime older than given date with jobId parent.
+  countJobInstancesByDate(jobId: UUID!, beforeAt: DateTime!): Int
+
+  # Get a condition instance's details by providing its UUID.
+  #
+  # You can only get a condition instance if you have at least the viewer role in the project associated to the condition instance or in all projects.
+  conditionInstance(id: UUID!): ConditionInstance
+
+  # Preview: Evaluate a condition expression with mocked variables
+  #
+  # This method maybe update or delete in future
+  evaluateConditionExpression(projectId: UUID!, expression: String!, variables: [ConditionExpressionVariableInput!]): Boolean
+
+  # List rights associated to a given project by providing its UUID.
+  #
+  # You can only list rights if you have at least the manager role in the project or in all projects.
+  rights(projectId: UUID!): [SecurityGroup!]
+
+  # Get a specific job version's details.
+  #
+  # You can only get a job version if you have at least the viewer role in the project associated to the job or in all projects.
+  jobVersion(jobId: UUID!, number: Int!): JobVersion
+
+  # Get a specific app version's details.
+  #
+  # You can only get an app version if you have at least the viewer role in the project associated to the app or in all projects.
+  appVersion(appId: UUID!, number: Int!): AppVersion
+
+  # List pipelines in a given project.
+  #
+  # You can only list pipelines if you have at least the viewer role in the project or in all projects.
+  #
+  # This deprecated endpoint allows to retrieve a pipeline having only linear versions without graph. To get all pipelines in linear or graph format, use endpoint `project` instead.
+  pipelines(projectId: UUID!): [Pipeline] @deprecated(reason: "Only for linears pipelines without graph, use project instead")
+
+  # Get a pipeline's details from its UUID.
+  #
+  # You can only get a pipeline's details if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  #
+  # This deprecated endpoint allows to retrieve a pipeline having only linear versions without graph.
+  # If you try to fetch a pipeline with at least one graph version, you won't get any result, use the endpoint `graphPipeline` instead.
+  pipeline(id: UUID!): Pipeline @deprecated(reason: "Only for linear pipeline without graph, use graphPipeline instead")
+
+  # Get a pipeline's details from its UUID.
+  #
+  # You can only get a pipeline's details if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  #
+  # This endpoint allows to retrieve a pipeline with versions in linear or graph format.
+  graphPipeline(id: UUID!): Pipeline
+
+
+  # Get a pipeline's details from its projectId and name.
+  #
+  # You can only get a pipeline's details if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  #
+  # This endpoint allows to retrieve a pipeline with versions in linear or graph format.
+  graphPipelineByName(projectId: UUID!, name: String!): Pipeline
+
+
+  # Get a pipeline's details from its projectId and alias.
+  #
+  # You can only get a pipeline's details if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  #
+  # This endpoint allows to retrieve a pipeline with versions in linear or graph format.
+  graphPipelineByAlias(projectId: UUID!, alias: String!): Pipeline!
+
+  # List users by realm.
+  usersByRealm: [UserEmail]
+
+  # Get a specific pipeline version's details.
+  #
+  # You can only get pipeline version if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  pipelineVersion(pipelineId: UUID!, number: Int!): PipelineVersion
+
+  # Count pipeline instances by status selector with pipelineId parent.
+  countDeletablePipelineInstancesByStatus(pipelineId: UUID!): [PipelineInstanceSelectorCount!]
+
+  # Count pipeline instances with startTime older than given date with pipelineId parent.
+  countDeletablePipelineInstancesByDate(pipelineId: UUID!, beforeAt: DateTime!): Int
+
+  # Get a specific pipeline instance's details.
+  #
+  # You can only get pipeline instance if you have at least the viewer role in the project associated to the pipeline or in all projects.
+  pipelineInstance(id: UUID!): PipelineInstance
+
+  # List all Docker credentials associated to a specific project by providing its UUID.
+  allDockerCredentials(projectId: UUID!): [DockerCredentials!]
+
+  # Get specific Docker credentials by providing their UUID and the project they belong to.
+  dockerCredentials(id: UUID!, projectId: UUID!): DockerCredentials
+
+  # Get Cluster Capacity in order to size correctly resource requests and limits.
+  getClusterCapacity: [ClusterNodeCapacity]
+
+  # List job and pipeline instances across all accessible projects in a timeframe.
+  projectReports(timeSlot: Int!, limit: Int!, skip: Int!): ProjectReports!
+
+  # Get connections related to a project.
+  getConnectionsByProject(projectId: UUID!): [Connection]!
+
+  # Get a connection's details from its UUID.
+  #
+  # You can only get a connection's details if you have at least the viewer role in the project associated to the connection or in all projects.
+  connection(id: UUID!): Connection
+
+  # Get Ext-Job values for a given param.
+  getExtJobParamValues(connectionId: UUID!, technologyId: UUID!, contextId: String!, paramId: String!, additionalContext: [EntryInput]!): ExtJobParamValueCallResult!
+
+  # Check if the connection is properly configured.
+  checkConnection(projectId: UUID!, connectionId: UUID, repositoryId: UUID!, connectionTypeId: String!, parameters: [EntryInput]!): CheckConnectionCallResult!
+}
+
+type Mutation {
+  # Run a job and get a job instance in response.
+  #
+  # You can only run job if you have at least the editor role in the project associated to the job or in all projects.
+  runJob(jobId: UUID!): JobInstance!
+
+  # Stop a job instance and get a job instance in return.
+  #
+  # You can only stop a job instance if you have at least the editor role in the project associated to the job instance or in all projects.
+  stopJobInstance(jobInstanceId: UUID!): JobInstance!
+
+  # Delete a job instances.
+  #
+  # You can remove only job instances that are children of jobId,
+  # and only a job instance if is terminated and not associated to a pipeline instance
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  deleteJobInstances(jobId: UUID!, jobInstanceIds: [UUID!]): [DeletionResultItem!]!
+
+  # Delete job instances by selector.
+  #
+  # You can remove only job instances that are children of jobId, and only job instances not associated to a pipeline instance
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  # - excludeJobInstanceIds corresponds to the instances you wish to remove from the status filter.
+  # - includeJobInstanceIds corresponds to the instances you wish to add to the status filter, takes precedence over exclude.
+  # It return the number of deleted job instances.
+  deleteJobInstancesBySelector(
+    jobId: UUID!,
+    selector: JobInstanceSelector!,
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases. use excludeJobInstanceIds instead.
+    minusJobInstanceIds: [UUID!],
+    excludeJobInstanceIds: [UUID!],
+    # Argument is deprecated : it is not implemented and may be removed or changed in future releases. use includeJobInstanceIds instead.
+    moreJobInstanceIds: [UUID!],
+    includeJobInstanceIds: [UUID!]
+  ): Int!
+
+  # Delete job instances with startTime older than given date.
+  #
+  # You can remove only job instances that are children of jobId, and only job instances not associated to a pipeline instance
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  # - excludeJobInstanceIds corresponds to the instances you wish to remove from the date filter.
+  # - includeJobInstanceIds corresponds to the instances you wish to add to the date filter, takes precedence over exclude.
+  # It return the number of deleted job instances.
+  deleteJobInstancesByDate(jobId: UUID!, beforeAt: DateTime!, excludeJobInstanceIds: [UUID!], includeJobInstanceIds: [UUID!]): Int!
+
+  # Create a project.
+  #
+  # You can only create a project if you have the project creator role.
+  #
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the whole platform, shorter than 255 characters and cannot be empty.
+  # - technology: must exist and be available. Use 'technologies' query to list all available technologies.
+  createProject(project: ProjectInput!): Project!
+
+  # Edit a project.
+  #
+  # You can only edit a project if you have the project manager role in the project you wish to edit.
+  #
+  # If a field is null or unspecified in the request, it will remain unchanged in the project.
+  #
+  # If a field is empty ("" or []) in the request, it will be set to empty in the project.
+  #
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the whole platform, shorter than 255 characters and cannot be empty.
+  # - technology: must exist and be available. Use 'technologies' query to list all available technologies.
+  editProject(project: ProjectEditionInput!): Project!
+
+  # Create a job.
+  #
+  # You can only create a job if you have at least the editor role in the project associated to the job or in all projects.
+  #
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the project, shorter than 255 characters and cannot be empty.
+  # - project: must exist. Use 'projects' query to list projects.
+  # - category: must exist in the project. Use 'technologiesByCategory(projectId: UUID!)' to list categories in the project
+  # - technology: must exist in the project. Use 'technologies' query to list all available technologies.
+  # - version: must exist in the given technology, be available and not deprecated. Use 'technologiesVersions(technologyId: UUID!)' to list available versions in a technology.
+  # - features: must be filled if the technology version allows them, otherwise it must not be populated. Use 'technologiesVersions(technologyId: UUID!)' to check if it is allowed for this technology version.
+  createJob(job: JobInput!, jobVersion: JobVersionInput!, file: Upload): Job!
+
+  # Create an app.
+  #
+  # You can only create an app if you have at least the editor role in the project associated to the app or in all projects.
+  #
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the project, shorter than 255 characters and cannot be empty.
+  # - project: must exist. Use 'projects' query to list projects.
+  # - version: set the dockerInfo field if it is a custom app or the runtimeContextId field if it is an app from Saagie catalog.
+  createApp(app: AppInput!): App!
+
+  # Install an app.
+  #
+  # You can only install an app if you have at least the editor role in the project associated to the app or in all projects.
+  installApp(projectId: UUID!, technologyId: UUID!, contextId: String!): App!
+
+  # Add a version to an app.
+  #
+  # You can add a new version to an app if you have at least the editor role in the project associated to the app or in all projects.
+  #
+  # **Fields validation:**
+  # - version: set the dockerInfo field if it is a custom app or the runtimeContextId field if it is an app from Saagie catalog.
+  addAppVersion(appId: UUID!, version: AppVersionInput!): AppVersion!
+
+  # Edit an app name and description
+  #
+  # You can only edit an app name and description if you have at least the editor role in the project associated to the app or in all projects.
+  editApp(appEdition: AppEditionInput!): App!
+
+  # Rollback an app to a specific version.
+  #
+  # You can rollback an app to a previous version if you have at least the editor role in the project associated to the app or in all projects.
+  rollbackAppVersion(appId: UUID!, versionNumber: Int!, volumesWithPath: [VolumeWithPathInput]): App
+
+  # Set/unset an app version as major.
+  #
+  #
+  # You can set/unset an app version as major if you have at least the editor role in the project associated to the app or in all projects.
+  setMajorAppVersion(appId: UUID!, versionNumber: Int!, isMajor: Boolean!): AppVersion
+
+  # Start an app. Returns the launched app.
+  #
+  # You can only run an app if you have at least the editor role in the project associated to the app or in all projects.
+  runApp(id: UUID!): App!
+
+  # Restart an app. Returns the launched app.
+  #
+  # You can only restart an app if you have at least the editor role in the project associated to the app or in all projects.
+  restartApp(id: UUID!): App!
+
+  # Stop an app. Returns the stopped app.
+  #
+  # You can only stop an app if you have at least the editor role in the project associated to the app or in all projects.
+  stopApp(id: UUID!): App
+
+  # Edit a job.
+  #
+  # You can only edit a job if you have at least the editor role in the project associated to the job or in all projects.
+  editJob(job: JobEditionInput!): Job!
+
+  # Edit a job description by AI.
+  #
+  # The job description will be edited and replaced by a text generated by a generative AI based on the job's source code,
+  # which will be sent to a service external to Saagie.
+  #
+  # You can only edit a job if you have at least the editor role in the project associated to the job or in all projects.
+  editJobWithAiGeneratedDescription(jobId: UUID!): Job!
+
+  # Add a job version.
+  #
+  # **Fields validation:**
+  # - version: must exist in the given technology, be available and not deprecated. Use 'technologiesVersions(technologyId: UUID!)' to list available versions in a technology.
+  # - features: must be filled if the technology version allows them, otherwise it must not be populated. Use 'technologiesVersions(technologyId: UUID!)' to check if it is allowed for this technology version.
+  # - resources: must be greater than or equal to 0.
+  addJobVersion(jobId: UUID!, jobVersion: JobVersionInput!, file: Upload): JobVersion!
+
+  # Delete job versions.
+  #
+  # You can remove only a job version that are children of jobId,
+  # and only a job version if is not associated to a pipeline (in any pipeline version)
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  deleteJobVersions(jobId: UUID!, jobVersionNumbers: [Int!]!): [DeletionVersionResultItem!]!
+
+  # Archive a job.
+  #
+  # You can only archive a job if you have at least the editor role in the project associated to the job or in all projects.
+  archiveJob(jobId: UUID!): Boolean @deprecated(reason: "Use deleteJob mutation instead")
+
+  # Delete an app.
+  #
+  # You can only delete an app if you have at least the editor role in the project associated to the app or in all projects.
+  deleteApp(appId: UUID!): App
+
+  # Archive a project.
+  #
+  # You can only archive a project if you have at least the manager role in the project or in all projects.
+  archiveProject(projectId: UUID!): Boolean @deprecated(reason: "Use deleteProject mutation instead")
+
+  # Allow to delete a project.
+  #
+  # You can only delete project if you have at least role manager on the project or on all projects.
+  deleteProject(projectId: UUID!): Boolean
+
+  # Rollback a job to a specific version.
+  #
+  # You can rollback a job to a previous version if you have at least the editor role in the project associated to the job or in all projects.
+  rollbackJobVersion(jobId: UUID!, versionNumber: Int!): Job
+
+  # Save an environment variable.
+  #
+  # Entity ID is required for project-specific environment variables.
+  saveEnvironmentVariable(entityId: UUID, environmentVariable: EnvironmentVariableInput!): EnvironmentVariable!
+
+  # Replace and save all environment variables in this scope entityId (or else GLOBAL).
+  #
+  # Each variable non specified in `rawEnvironmentVariables` but existing in the platform in this scope entityId (or else GLOBAL), will be deleted (except the password).
+  # Each variable specified in `rawEnvironmentVariables` but not existing in the platform in this scope entityId (or else GLOBAL), will be created.
+  # Each variable specified in `rawEnvironmentVariables` with a key name existing in the platform in this scope entityId (or else GLOBAL), will be modified with this value.
+  #
+  # `rawEnvironmentVariables` must have the format of "env_var_name=value" for one variable and each variable must be separate with '\n'.
+  # For example: "myFirstEnvVar=12\nOTHER_ENV_VAR=30\nAnotherVar=hello".
+  #
+  # Entity ID is required for project and pipeline environment variables.
+  replaceEnvironmentVariablesByRawForScope(
+    entityId: UUID,
+    scope: EnvVarScope!,
+    rawEnvironmentVariables: String!
+  ): [EnvironmentVariable!]
+
+  # Delete an environment variable.
+  #
+  # Entity ID is required for project-specific environment variables.
+  deleteEnvironmentVariable(id: UUID!): Boolean!
+
+  # Set/unset a job version as major.
+  #
+  # You can set/unset a job version as major if you have at least the editor role in the project associated to the job or in all projects.
+  setMajorJobVersion(jobId: UUID!, versionNumber: Int!, isMajor: Boolean!): JobVersion
+
+  # Duplicate a job in the same project.
+  #
+  # You can only duplicate a job if you have at least role editor on the project associated to the job or on all projects.
+  duplicateJob(originalJobId: UUID!): Job!
+
+  # Move jobs from a project to another.
+  #
+  # You can only move jobs if you have at least the editor role in both the source and target projects or in all projects.
+  #
+  # **Fields validation:**
+  # - jobs: must exist, must rely on the same technology and belong to the same project, must be deletable (not in pipeline),
+  #   must not be in migration state, streaming or scheduled.
+  # - target project: must exist, must not be the same as the source project, must be ready.
+  # - category: must exist in the target project and have the appropriate job technologies.
+  # This deprecated endpoint allows to async move jobs. Use the endpoint `moveJob` instead.
+  moveJobs(jobIds: [UUID!]!, projectId: UUID!, category: String): Boolean @deprecated(reason: "Use moveJob")
+
+  # Move job from a project to another. The target can be in another platform.
+  #
+  # You can only move job if you have at least the editor role in both the source and target projects.
+  #
+  # **Fields validation:**
+  # - jobId: must exist, must be deletable (not in pipeline), must not be in migration state, streaming or scheduled.
+  # - targetPlatformId: must exist, must not be the same as the source project, must be ready.
+  # - targetProjectId: must not be the same as the source project, must exist and have the appropriate technology in the same category or target category if it is given.
+  moveJob(jobId: UUID!, targetPlatformId: Int!, targetProjectId: UUID!, targetCategory: String): UUID!
+
+  # Delete a job.
+  #
+  # You can only delete a job if you have at least role editor on the project associated to the job or on all projects.
+  deleteJob(jobId: UUID!): Boolean
+
+  # Create a linear pipeline.
+  #
+  # You can only create a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  #
+  # This deprecated endpoint allows to create only linear pipeline. To create graph pipelines, use the endpoint `createGraphPipeline` instead.
+  createPipeline(pipeline: PipelineInput): Pipeline! @deprecated(reason: "Only for old linears pipelines without graph, use createGraphPipeline instead")
+
+  # Create a pipeline in a graph format based on DAG model (Directed Acyclic Graph)
+  #
+  # You can only create a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  createGraphPipeline(pipeline: GraphPipelineInput): Pipeline!
+
+  # Edit a pipeline.
+  #
+  # You can only edit a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  editPipeline(pipeline: PipelineEditionInput): Pipeline!
+
+  # Run a pipeline and get a pipeline instance in response.
+  #
+  # You can only run a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  runPipeline(pipelineId: UUID!): PipelineInstance!
+
+  # Delete a pipeline.
+  #
+  # **Warning:** This operation cannot be undone.
+  #
+  # You can only delete a pipeline if you have the global Super-Admin role.
+  deletePipeline(id: UUID!): Boolean!
+
+  # Duplicate a pipeline in the same project. Only current version of pipeline is duplicated.
+  # By default, pipeline's jobs are not duplicated.
+  #
+  # **Fields validation:**
+  # - originalPipelineId: (required) must exist, must be deletable, must not be in migration state.
+  # - duplicateJobs: (optional, false by default) if true, duplicate all jobs (only each current version) associated with the current version of pipeline.
+
+  # You can only duplicate a pipeline if you have at least role editor on the project associated to the pipeline or on all projects.
+  duplicatePipeline(originalPipelineId: UUID!, duplicateJobs: Boolean): Pipeline!
+
+  # Move pipeline with its jobs from a project to another. The target can be in another platform.
+  # Also move all jobs associated with this pipeline.
+  # Move all versions of all jobs of pipeline and all versions of pipeline.
+  #
+  # You can only move pipeline if you have at least the editor role in both the source and target projects.
+  # You can only move pipeline if all its jobs (and all versions) is only in this pipeline and not other.
+  # All job's technologies must exist in the target project.
+  #
+  # **Fields validation:**
+  # - pipelineId: must exist, must be deletable, must not be in migration state.
+  # - targetPlatformId: must exist, must not be the same as the source project, must be ready.
+  # - targetProjectId: must not be the same as the source project, must exist and have the appropriate technology in the same category or target category if it is given.
+  movePipeline(pipelineId: UUID!, targetPlatformId: Int!, targetProjectId: UUID!): UUID!
+
+  # Add a new pipeline version in linear format to an existing pipeline.
+  #
+  # You can only add a version to a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  # The parameters sourceUrl and releaseNote are optional.
+  # SourceUrl should be an http or https valid url. It represents the source code url for the pipeline definition.
+  #
+  # This deprecated endpoint allows to add a version to a linear pipeline. To add a graph pipeline version, use the endpoint `addGraphPipelineVersion` instead.
+  addPipelineVersion(pipelineId: UUID!, jobsId: [UUID!]!, releaseNote: String, sourceUrl: String): PipelineVersion! @deprecated(reason: "Only for old linears pipelines without graph, use addGraphPipelineVersion instead")
+
+  # Add a new pipeline version in graph format based on DAG model (Directed Acyclic Graph) to an existing pipeline.
+  #
+  # You can only add a version to a pipeline if you have at least the editor role in the project associated to the pipeline or in all projects.
+  # The parameters sourceUrl and releaseNote are optional.
+  # SourceUrl should be an http or https valid url. It represents the source code url for the pipeline definition.
+  #
+  addGraphPipelineVersion(pipelineId: UUID!, graph: PipelineGraphInput!, releaseNote: String, sourceUrl: String): PipelineVersion!
+
+  # Rollback a pipeline to a specific version.
+  #
+  # You can rollback a pipeline to a previous version if you have at least the editor role in the project associated to the pipeline or in all projects.
+  rollbackPipelineVersion(pipelineId: UUID!, versionNumber: Int!): Pipeline
+
+  # Set/unset a pipeline version as major.
+  #
+  # You can set/unset a pipeline version as major if you have at least the editor role in the project associated to the pipeline or in all projects.
+  setMajorPipelineVersion(pipelineId: UUID!, versionNumber: Int!, isMajor: Boolean!): PipelineVersion
+
+  # Delete pipeline instances.
+  # All job instances (and their logs) associated with this pipelines instances will be deleted.
+  #
+  # You can remove only pipeline instances that are children of pipelineId, and only a pipeline instance if is terminated.
+  # You can only delete if you have at least the editor role in the project associated.
+  deletePipelineInstances(pipelineId: UUID!, pipelineInstanceIds: [UUID!]): [DeletionResultItem!]!
+
+  # Delete pipeline versions.
+  #
+  # You can remove only a pipeline version that are children of pipelineId, and only a pipeline version with terminated instances.
+  # You can only delete if you have at least the editor role in the project associated.
+  deletePipelineVersions(pipelineId: UUID!, pipelineVersionNumbers: [Int!]!): [DeletionVersionResultItem!]!
+
+  # Delete pipeline instances by status selector.
+  # All job instances (and their logs) associated with this pipelines instances will be deleted.
+  #
+  # You can remove only pipeline instances that are children of pipelineId
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  # - excludePipelineInstanceIds corresponds to the instances you wish to remove from the status filter.
+  # - includePipelineInstanceIds corresponds to the instances you wish to add to the status filter, takes precedence over exclude.
+  # It return the number of deleted pipeline instances.
+  deletePipelineInstancesByStatusSelector(
+    pipelineId: UUID!,
+    selector: PipelineInstanceStatusSelector!,
+    excludePipelineInstanceIds: [UUID!],
+    includePipelineInstanceIds: [UUID!]
+  ): Int!
+
+  # Delete pipeline instances with startTime older than given date.
+  # All job instances (and their logs) associated with this pipelines instances will be deleted.
+  #
+  # You can remove only pipeline instances that are children of pipelineId
+  # and you can only run the delete if you have at least the editor role in the project associated.
+  # - excludePipelineInstanceIds corresponds to the instances you wish to remove from the date filter.
+  # - includePipelineInstanceIds corresponds to the instances you wish to add to the date filter, takes precedence over exclude.
+  # It return the number of deleted job instances.
+  deletePipelineInstancesByDateSelector(pipelineId: UUID!, beforeAt: DateTime!, excludePipelineInstanceIds: [UUID!], includePipelineInstanceIds: [UUID!]): Int!
+
+  # Stop a pipeline instance and get a pipeline instance in return.
+  #
+  # You can only stop a pipeline instance if you have at least the editor role in the project associated to the pipeline instance or in all projects.
+  stopPipelineInstance(pipelineInstanceId: UUID!): PipelineInstance!
+
+  # Create Docker credentials. The couple registry/username must be unique within the project.
+  # If you do not set a registry, the registry will be Docker Hub.
+  createDockerCredentials(dockerCredentials: DockerCredentialsInput): DockerCredentials
+
+  # Update Docker credentials. Password is mandatory to update credentials.
+  # If you do not set a registry, the registry will be updated to Docker Hub.
+  updateDockerCredentials(dockerCredentialsUpdate: DockerCredentialsUpdate): DockerCredentials
+
+  # Delete Docker credentials.
+  deleteDockerCredentials(id: UUID!, projectId: UUID!): Boolean
+
+  # Create a volume.
+  #
+  # You can only create a volume if you have at least the editor role in the project associated to the volume or in all projects.
+  #
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the project, shorter than 255 characters and cannot be empty.
+  # - project: must exist. Use 'projects' query to list all projects.
+  # - size: size in MB, must be between the step (eq. minimum) and the maximum value set by your administrator.
+  createVolume(volume: VolumeInput!): Volume!
+
+  # Delete a volume.
+  #
+  # You can only delete a volume if you have at least the editor role in the project associated to the volume or in all projects.
+  deleteVolume(id: UUID!): Volume
+
+  # Edit a volume.
+  #
+  # You can only edit a volume if you have at least the editor role in the project associated to the volume or in all projects.
+  editVolume(volumeEdition: VolumeEditionInput!): Volume!
+
+  unlinkVolume(id: UUID!): Volume
+
+  # Move volume from a project to another. The target can be in another platform.
+  #
+  # You can only move volume if you have at least the editor role in both the source and target projects.
+  #
+  # **Fields validation:**
+  # - volumeId: must exist, must be link with an app
+  # - targetPlatformId: must exist, must not be the same as the source project, must be ready.
+  # - targetProjectId: must not be the same as the source project and must exist
+  #
+  # **Returns:**
+  # UUID of the volume moved in the target
+  moveVolume(volumeId: UUID!, targetPlatformId: Int!, targetProjectId: UUID!): UUID!
+
+  # Duplicate a volume in the same project.
+  #
+  # You can only duplicate a volume if you have at least role editor on the project associated to the volume or on all projects.
+  duplicateVolume(originalVolumeId: UUID!): Volume!
+
+  # Create a Connection related to a project.
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the project, shorter than 255 characters and cannot be empty.
+  # - project: must exists. Use 'projects' query to list all projects.
+  # - connectionType: must exists in Technology-Catalog.
+  # - Values: must comply with Connection Type
+  createProjectConnection(connectionInput: ConnectionInput): Connection!
+
+  # Edit a Connection related to a project.
+  # **Fields validation:**
+  # - name: must be unique (case insensitive) in the project, shorter than 255 characters and cannot be empty.
+  # - project: must exists. Use 'projects' query to list all projects.
+  # - connectionType: must exists in Technology-Catalog.
+  # - Values: must comply with Connection Type
+  editProjectConnection(connectionInput: ConnectionEditionInput!): Connection!
+
+  # Delete a batch of Connections related to one project.
+  deleteProjectConnections(connectionIds: [UUID!]!): Boolean!
+}
+
+input ProjectInput {
+  name: String!
+  description: String
+  technologiesByCategory: [TechnologyByCategoryInput!]
+  appTechnologies: [TechnologyInput!]
+  authorizedGroups: [SecurityGroupInput]
+}
+
+input ProjectEditionInput {
+  id: UUID!
+  name: String
+  description: String
+  authorizedGroups: [SecurityGroupInput]
+  technologiesByCategory: [TechnologyByCategoryInput!]
+  appTechnologies: [TechnologyInput!]
+}
+
+input TechnologyByCategoryInput {
+  jobCategory: String!
+  technologies: [TechnologyInput!]
+}
+
+input TechnologyInput {
+  id: UUID!
+}
+
+input JobInput {
+  projectId: UUID!
+  name: String!
+  # `alias` is the short name of this job which can be used in your other jobs (directly in your code) to reference it.
+  #
+  # Only alphanumeric and underscore characters are allowed.
+  alias: String
+  description: String
+  category: String!
+  technology: TechnologyInput!
+  isScheduled: Boolean!
+  cronScheduling: Cron
+  scheduleTimezone: TimeZone
+  alerting: JobPipelineAlertingInput
+  isStreaming: Boolean!
+  doesUseGPU: Boolean
+  resources: JobResourceInput
+}
+
+input JobEditionInput {
+  id: UUID!
+  name: String
+  # `alias` is the short name of this job which can be used in your other jobs (directly in your code) to reference it.
+  #
+  # Only alphanumeric and underscore characters are allowed.
+  alias: String
+  description: String
+  isScheduled: Boolean
+  cronScheduling: Cron
+  scheduleTimezone: TimeZone
+  alerting: JobPipelineAlertingInput
+  isStreaming: Boolean
+  doesUseGPU: Boolean
+  resources: JobResourceInput
+}
+
+input JobVersionInput {
+  releaseNote: String
+  runtimeVersion: String
+  commandLine: String
+  # if true: previous version artifact will be used (no need to upload it again).
+  # default = false
+  usePreviousArtifact: Boolean
+  # DEPRECATED. Used to upload a file via REST after this mutation.
+  # Now you can use the 'file' field in the mutation to upload file.
+  packageInfo: JobPackageInput
+  dockerInfo: JobDockerInput
+  # DEPRECATED. resources attribute is ignored.
+  resources: JobResourcesInput
+  extraTechnology: ExtraTechnologyInput
+  # DEPRECATED. Use JobInput.doesUseGPU instead.
+  doesUseGPU: Boolean
+  connectionId: UUID
+  externalJobParams: [ExternalJobParamInput!]
+
+  # Version reference url (http or https) pushed only by API
+  sourceUrl: String
+}
+
+input ExternalJobParamInput {
+  id: String!
+  value: String
+}
+
+input JobPackageInput {
+  name: String!
+  # DEPRECATED. Use the same field at root of jobVersion instead.
+  usePreviousArtifact: Boolean
+}
+
+input JobDockerInput {
+  image: String!
+  dockerCredentialsId: UUID
+}
+
+input AppInput {
+  projectId: UUID!
+  name: String!
+  description: String
+  technologyId: UUID!
+  version: AppVersionInput!
+  alerting: AppAlertingInput
+  resources: AppResourceInput
+}
+
+input AppVersionInput {
+  dockerInfo: AppDockerInput
+  runtimeContextId: String
+  ports: [PortInput!]!
+  volumesWithPath: [VolumeWithPathInput]
+  releaseNote: String
+}
+
+input AppEditionInput {
+  id: UUID!
+  name: String
+  description: String
+  alerting: AppAlertingInput
+  resources: AppResourceInput
+}
+
+input PortInput {
+  name: String
+  number: Int!
+  isRewriteUrl: Boolean!
+  basePathVariableName: String
+  scope: ExpositionScope
+}
+
+input VolumeWithPathInput {
+  path: String!
+  volumeId: UUID!
+}
+
+input AppDockerInput {
+  image: String!
+  dockerCredentialsId: UUID
+}
+
+input ExposedPortInput {
+  name: String
+  port: Int!
+  isRewriteUrl: Boolean
+  basePathVariableName: String
+  isAuthenticationRequired: Boolean
+}
+
+# DEPRECATED Use JobResourceInput instead
+input JobResourcesInput {
+  cpu: Float!
+  memory: Int!
+  disk: Int!
+}
+
+input JobResourceInput {
+  cpu: ResourceRequestLimitInput
+  memory: ResourceRequestLimitInput
+  gpu: ResourceRequestLimitInput
+}
+
+input AppResourceInput {
+  cpu: ResourceRequestLimitInput
+  memory: ResourceRequestLimitInput
+  gpu: ResourceRequestLimitInput
+}
+
+input ResourceRequestLimitInput {
+  request: Float
+  limit: Float
+}
+
+input JobPipelineAlertingInput {
+  emails: [Email!]
+  logins: [String!]
+  statusList: [InstanceStatus!]!
+}
+
+input AppAlertingInput {
+  emails: [Email!]
+  logins: [String!]
+  statusList: [AppStatus!]!
+}
+
+input ExtraTechnologyInput {
+  language: String!
+  version: String!
+}
+
+input SecurityGroupInput {
+  name: ID!
+  role: ProjectRole
+}
+
+input PipelineInput {
+  name: String!
+  alias: String!
+  description: String
+  alerting: JobPipelineAlertingInput
+  projectId: UUID!
+  jobsId: [UUID!]!
+  releaseNote: String
+  isScheduled: Boolean!
+  cronScheduling: Cron
+  scheduleTimezone: TimeZone
+
+  # Version reference url (http or https) pushed only by API
+  sourceUrl: String
+}
+
+# Input to create a pipeline with a Directed Acyclic Graph
+input GraphPipelineInput {
+  name: String!
+  alias: String!
+  description: String
+  alerting: JobPipelineAlertingInput
+  # Enable or disable modification of variables in jobs during execution
+  hasExecutionVariablesEnabled: Boolean
+  environmentVariables: String
+  projectId: UUID!
+  graph: PipelineGraphInput!
+  releaseNote: String
+  isScheduled: Boolean!
+  cronScheduling: Cron
+  scheduleTimezone: TimeZone
+
+  # Version reference url pushed only by API
+  sourceUrl: String
+}
+
+# Input for a Directed Acyclic Graph (DAG) of nodes of jobs and conditions of a pipeline in graph format
+input PipelineGraphInput {
+  jobNodes: [JobNodeInput!]
+  conditionNodes: [ConditionNodeInput!]
+}
+
+# Input for a graph node of a job in a pipeline
+input JobNodeInput {
+  id: UUID!
+  job: JobInGraphPipelineInput!
+  position: NodePositionInput
+  nextNodes: [UUID!]
+}
+
+# Input for a job in a job node input in a graph pipeline
+input JobInGraphPipelineInput {
+  id: UUID!
+}
+
+# Input for a graph node of a condition in a graph pipeline
+input ConditionNodeInput {
+  id: UUID!
+  position: NodePositionInput
+  nextNodesSuccess: [UUID!]
+  nextNodesFailure: [UUID!]
+  condition: ConditionInput
+}
+
+input ConditionInput {
+  status: ConditionStatusInput
+  custom: ConditionExpressionInput
+}
+
+input ConditionStatusInput {
+  value: ConditionStatusPresetValueInput!
+}
+
+enum ConditionStatusPresetValueInput {
+  AllSuccess
+  AllSuccessOrSkipped
+  AtLeastOneSuccess
+}
+
+input ConditionExpressionInput {
+  expression: String!
+}
+
+# Input for mocked variable in evaluate condition expression
+input ConditionExpressionVariableInput {
+  key: String!
+  value: String!
+}
+
+# Input for a position of the node of a graph pipeline in the GUI
+input NodePositionInput {
+  x: Float!
+  y: Float!
+}
+
+input PipelineEditionInput {
+  id: UUID!
+  name: String
+  alias: String
+  description: String
+  alerting: JobPipelineAlertingInput
+  # Enable or disable modification of variables in jobs during execution
+  hasExecutionVariablesEnabled: Boolean
+  isScheduled: Boolean
+  cronScheduling: Cron
+  scheduleTimezone: TimeZone
+}
+
+input DockerCredentialsInput {
+  registry: String
+  username: String!
+  password: String!
+  projectId: UUID!
+}
+
+input DockerCredentialsUpdate {
+  id: UUID!
+  registry: String
+  username: String
+  password: String!
+  projectId: UUID!
+}
+
+input VolumeInput {
+  name: String!
+  description: String
+  # The volume size in MB
+  size: DataSize!
+  projectId: UUID!
+}
+
+input VolumeEditionInput {
+  id: UUID!
+  name: String
+  description: String
+  size: DataSize
+}
+
+input EntryInput {
+  key: String!
+  value: String
+}
+
+type PlatformCounts {
+  projects: Int!
+  jobs: Int!
+  apps: Int!
+  pipelines: Int!
+}
+
+type Platform {
+  id: Int!
+  name: String
+  counts: PlatformCounts!
+}
+
+type TechnologyVersion {
+  id: ID!
+  technologyLabel: String!
+  versionLabel: String!
+  defaultResources: JobResources!
+  isRecommended: Boolean!
+  deprecated: Boolean!
+  isAvailable: Boolean!
+  secondaryTechnologies: [SecondaryTechnology!]
+  features: [Feature!]
+  lastUpdate: DateTime
+}
+
+type Feature {
+  field: String!
+  label: String!
+  isMandatory: Boolean!
+  comment: String
+  defaultValue: String
+}
+
+type SecondaryTechnology {
+  label: String!
+  isAvailable: Boolean!
+  contexts: [SecondaryTechnologyContext!]
+  versions: [String!] @deprecated(reason: "Use contexts instead")
+  features: [Feature!]
+}
+
+type SecondaryTechnologyContext {
+  id: String!
+  label: String!
+  lastUpdate: DateTime!
+}
+
+type TechnologyByCategory {
+  jobCategory: String!
+  technologies: [Technology!]
+}
+
+type JobsCountByCategory {
+  jobCategory: String!
+  jobsCountByTechnology: [JobsCountByTechnology!]
+  count: Int!
+}
+
+type Project {
+  id: UUID!
+  name: String!
+  creator: String!
+  description: String
+  jobsCount: Int!
+  jobs(limit: Int): [Job!]!
+  status: ProjectStatus!
+  apps: [App!]!
+  # Volumes associated to this project
+  volumes: [Volume!]!
+  pipelines: [Pipeline!]!
+  technologiesByCategory: [TechnologyByCategory]!
+  appTechnologies: [Technology]!
+}
+
+type Volume {
+  id: UUID!
+  name: String!
+  creator: String!
+  description: String
+  size: DataSize!
+  projectId: UUID!
+  creationDate: DateTime!
+  linkedApp: App
+  migrationStatus: MigrationStatus
+  migrationPlatformId: Int
+  migrationProjectId: UUID
+  migrationVolumeId: UUID
+  duplicationStatus: DuplicationStatus
+  duplicationTargetId: UUID
+  originalVolumeId: UUID
+  expansionStatus: ExpansionStatus
+  isLocked: Boolean
+}
+
+type Job {
+  id: UUID!
+  project: Project!
+  name: String!
+  # `alias` is the short name of this job which can be used in your other jobs (directly in your code) to reference it.
+  #
+  # Only alphanumeric and underscore characters are allowed.
+  alias: String
+  description: String
+  aiDescriptionVersionNumber: Int
+  aiDescriptionState: JobAiGeneratedDescriptionState
+  countJobInstance: Int
+  # Attribute checkInPipelineInstance is now deprecated
+  instances(limit: Int, skip: Int, checkInPipelineInstance: Boolean, lastExecution: Boolean): [JobInstance!]
+  versions(limit: Int, onlyCurrent: Boolean): [JobVersion!]!
+  category: String!
+  technology: Technology
+  isScheduled: Boolean!
+  cronScheduling: Cron
+  scheduleStatus: ScheduleStatus
+  scheduleTimezone: TimeZone,
+  alerting: JobPipelineAlerting
+  isStreaming: Boolean!
+  creationDate: DateTime!
+  migrationStatus: MigrationStatus
+  migrationPlatformId: Int
+  migrationProjectId: UUID
+  migrationJobId: UUID
+  originalJobId: UUID
+  isDeletable: Boolean!
+  deletableState: JobDeletableState
+  pipelines(isCurrent: Boolean): [Pipeline!]
+  graphPipelines(isCurrent: Boolean): [Pipeline!]
+  doesUseGPU: Boolean
+  resources: JobResourceRequestLimit
+}
+
+type JobDeletableState {
+  deletable: Boolean!
+  reasons: [JobDeletableStateReason!]
+}
+
+type JobAiGeneratedDescriptionState {
+  enabled: Boolean!
+  reasons: [JobAiGeneratedDescriptionStateReason!]
+}
+
+type App {
+  id: UUID!
+  name: String!
+  description: String
+  creationDate: DateTime!
+  creator: String!
+  versions: [AppVersion!]!
+  currentVersion: AppVersion
+  technology: Technology
+  project: Project!
+  linkedVolumes: [Volume!]
+  isGenericApp: Boolean!
+  history: AppHistory
+  alerting: AppAlerting
+  resources: AppResourceRequestLimit
+}
+
+type AppHistory {
+  id: UUID!
+  countEvents: Int
+  events(limit: Int, skip: Int): [StatusHistoryByAction!]
+  runningVersionNumber: Int!
+  currentDockerInfo: AppDocker
+  currentStatus: AppStatus!
+  currentStatusReason: String
+  currentExecutionId: UUID
+  startTime: DateTime
+  stopTime: DateTime
+  author: String
+  triggerType: TriggerType
+}
+
+type StatusHistoryByAction {
+  id: UUID!
+  appHistoryId: UUID!
+  action: StatusHistory!
+  statuses: [StatusHistory]!
+}
+
+type StatusHistory {
+  appHistoryId: UUID!
+  event: AppEvent!
+  transitionTime: DateTime!
+}
+
+interface AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+}
+
+type StatusRetrieve implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  status: AppStatus!
+  reason: String
+}
+
+type RunAction implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  author: String
+  triggerType: TriggerType
+}
+
+type RollbackAction implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  author: String
+  triggerType: TriggerType
+}
+
+type UpgradeAction implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  author: String
+  triggerType: TriggerType
+}
+
+type StopAction implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  author: String
+  triggerType: TriggerType
+}
+
+type RestartAction implements AppEvent {
+  recordAt: DateTime!
+  executionId: UUID!
+  versionNumber: Int!
+  author: String
+  triggerType: TriggerType
+}
+
+enum AppStatus {
+  STARTED
+  STARTING
+  RESTARTING
+  RECOVERING
+  UPGRADING
+  ROLLING_BACK
+  STOPPING
+  STOPPED
+  FAILED
+  UNKNOWN
+}
+
+type StatusWithRecordAt {
+  status: AppStatus!
+  recordAt: DateTime!
+}
+
+type AppStats {
+  uptimePercentage: Float!
+  downtimePercentage: Float!
+  recoveredCount: Int!
+}
+
+type AppLogs {
+  count: Int
+  content: [AppLog!]
+}
+
+type AppLog {
+  index: Int!
+  value: String!
+  containerId: String!
+  stream: LogStream!
+  recordAt: DateTime!
+}
+
+type Logs {
+  count: Int
+  content: [Log!]
+}
+
+type Log {
+  index: Int
+  value: String!
+  stream: LogStream!
+}
+
+input EnvironmentVariableInput {
+  id: UUID,
+  name: String!
+  scope: EnvVarScope!
+  value: String
+  description: String
+  isPassword: Boolean!
+}
+
+type EnvironmentVariable {
+  id: UUID!
+  name: String!
+  scope: EnvVarScope!
+  value: String
+  description: String
+  isPassword: Boolean!
+  overriddenValues: [OverriddenValues]!
+  # Indicates whether this env var is valid with current rules defined in user documentation
+  isValid: Boolean
+  # Indicate why this variable is invalid, otherwise null
+  invalidReasons: [EnvironmentVariableValidationError]
+}
+
+enum EnvironmentVariableValidationErrorType {
+  NAME_IS_EMPTY,
+  NAME_DOESNT_START_WITH_LETTER,
+  NAME_CONTAINS_INVALID_CHARACTERS,
+  TOO_LONG_NAME,
+  TOO_LONG_VALUE,
+  MAXIMUM_COUNT_EXCEEDED,
+  NULL_VALUE_UNEXPECTED,
+  NAME_ALREADY_USED,
+  PROJECT_IS_NOT_FOUND,
+  APP_IS_NOT_FOUND,
+  JOB_IS_NOT_FOUND,
+  UNEXPECTED_LINKED_ENTITY_ON_GLOBAL_SCOPE,
+  UNEXPECTED_LINKED_ENTITY_ID_IS_NULL
+}
+
+type EnvironmentVariableValidationError {
+  type: EnvironmentVariableValidationErrorType!
+  concernedProperty: String!
+  message: String!
+}
+
+type OverriddenValues {
+  scope: EnvVarScope!
+  id: UUID!
+  value: String
+  description: String
+  isPassword: Boolean!
+}
+
+# secondary types
+type JobInstance {
+  id: UUID!
+  number: Int!
+  status: InstanceStatus! @deprecated(reason: "Use history.currentStatus.status instead")
+  statusDetails: String @deprecated(reason: "Use history.currentStatus.details instead")
+  history: InstanceHistory
+  version: JobVersion!
+  startTime: DateTime!
+  endTime: DateTime
+  pipelineInstanceId: UUID
+  pipelineInstance: PipelineInstance
+
+  # All execution variables received in input by the job instance. Note: value of password variables are not visible.
+  executionVariablesInput: [ExecutionVariablesInput]
+
+  # Execution global variables received in input by the job instance. Note: value of password variables are not visible.
+  executionGlobalVariablesInput: [ExecutionVariable]
+
+  # Execution variables write in output by the job instance. Note: value of password variables are not visible.
+  executionVariablesOutput: [ExecutionVariable]
+
+  # Execution variables input & output in the job instance, by key. Note: value of password variables are not visible.
+  executionVariablesByKey: [ExecutionVariableByKeyVariable]
+
+  jobId: UUID!
+  jobNodeId: UUID
+  jobAlias: String
+  effectiveDockerImage: String!
+  sparkuiUrl: String
+  runTrigger: Trigger
+  stopTrigger: AuthoredTrigger
+  deletableState: JobInstanceDeletableState
+}
+
+type JobInstanceDeletableState {
+  deletable: Boolean!
+  reasons: [JobInstanceDeletableStateReason!]
+}
+
+type InstanceHistory {
+  statuses: [InstanceStatusDetails]!
+  currentStatus: InstanceStatusDetails!
+}
+
+type InstanceStatusDetails {
+  status: InstanceStatus!
+  details: String
+  reason: StatusReason
+  recordAt: DateTime!
+}
+
+type ExecutionVariablesInput {
+  parentJobInstanceId: String
+  parentJobId: String
+  parentJobAlias: String
+  isDirectParent: Boolean
+  executionVariables: [ExecutionVariable]
+  isGlobalVariables: Boolean!
+}
+
+type ExecutionVariableByKeyVariable {
+  keyVariable: String!
+  isPassword: Boolean
+  valueVariablesInputByJobInstance: [ExecutionVariableValueInputByParent]
+  valueGlobalVariableInput: String
+  valueVariableOutput: String
+}
+
+type ExecutionVariableValueInputByParent {
+  jobInstanceId: UUID!
+  jobId: UUID!
+  jobAlias: String!
+  jobName: String!
+  isDirectParent: Boolean!
+  value: String
+  isPassword: Boolean
+}
+
+interface Trigger {
+  triggerType: TriggerType!
+}
+
+type AuthoredTrigger implements Trigger {
+  author: String
+  triggerType: TriggerType!
+}
+
+type AnonymousTrigger implements Trigger {
+  triggerType: TriggerType!
+}
+
+type JobVersion {
+  number: Int!
+  creationDate: DateTime!
+  releaseNote: String
+  runtimeVersion: String
+  commandLine: String
+  packageInfo: JobPackage
+  dockerInfo: JobDocker
+  resources: JobResources @deprecated(reason: "Use Job.resources instead")
+  extraTechnology: ExtraTechnology
+  isCurrent: Boolean!
+  isMajor: Boolean
+  deletableState: JobVersionDeletableState
+  creator: String!
+  doesUseGPU: Boolean @deprecated(reason: "Use Job.doesUseGPU instead")
+  connectionId: UUID
+  externalJobParams: [ExternalJobParam!]
+
+  # Version reference url (http or https) pushed only by API.
+  sourceUrl: String
+}
+
+type JobVersionDeletableState {
+  deletable: Boolean!
+  reasons: [JobVersionDeletableStateReason!]
+}
+
+type ExternalJobParam {
+  id: String!
+  value: String!
+}
+
+type JobPackage {
+  name: String!
+  downloadUrl: String
+}
+
+type JobDocker {
+  image: String!
+  dockerCredentialsId: UUID
+}
+
+type AppVersion {
+  number: Int!
+  creationDate: DateTime!
+  releaseNote: String
+  dockerInfo: AppDocker
+  runtimeContextId: String
+  creator: String!
+  ports: [Port!]!
+  isMajor: Boolean
+  volumesWithPath: [VolumeWithPath!]
+}
+
+type VolumeWithPath {
+  path: String!
+  volume: Volume
+}
+
+type AppDocker {
+  image: String!
+  dockerCredentialsId: UUID
+}
+
+type Port {
+  name: String
+  number: Int!
+  isRewriteUrl: Boolean!
+  basePathVariableName: String
+  scope: ExpositionScope
+  internalUrl: String!
+}
+
+enum ExpositionScope {
+  PROJECT
+  PUBLIC
+}
+
+type ExposedPort {
+  name: String
+  port: Int!
+  isRewriteUrl: Boolean
+  basePathVariableName: String
+  isAuthenticationRequired: Boolean
+}
+
+type Technology {
+  id: UUID!
+}
+
+type JobsCountByTechnology {
+  technology: Technology!
+  count: Int!
+}
+
+type AppsCountByTechnology {
+  technology: Technology!
+  count: Int!
+}
+
+type JobResources {
+  cpu: Float!
+  memory: Int!
+  disk: Int!
+}
+
+type JobResourceRequestLimit {
+  cpu: ResourceRequestLimit
+  memory: ResourceRequestLimit
+  gpu: ResourceRequestLimit
+}
+
+type AppResourceRequestLimit {
+  cpu: ResourceRequestLimit
+  memory: ResourceRequestLimit
+}
+
+type ResourceRequestLimit {
+  request: Float
+  limit: Float
+}
+
+type AppAlerting {
+  emails: [String!]!
+  statusList: [AppStatus!]!
+  loginEmails: [UserEmail!]
+}
+
+type JobPipelineAlerting {
+  emails: [String!]!
+  statusList: [InstanceStatus!]!
+  loginEmails: [UserEmail!]
+}
+
+type ExtraTechnology {
+  language: String!
+  version: String!
+}
+
+type SecurityGroup {
+  name: ID!
+  role: ProjectRole
+  isAllProjects: Boolean!
+}
+
+type Pipeline {
+  id: UUID!
+  name: String!
+  alias: String!
+  description: String
+  alerting: JobPipelineAlerting
+  # Indicates if modification of variables in jobs of this pipeline is enable or disable during execution
+  hasExecutionVariablesEnabled: Boolean
+  pipelineInstanceCount: Int!
+  instances(limit: Int, skip: Int, lastExecution: Boolean): [PipelineInstance!]
+  versions(limit: Int, onlyCurrent: Boolean): [PipelineVersion!]!
+  projectId: UUID! @deprecated(reason: "Use project instead")
+  project: Project!
+  creationDate: DateTime!
+  creator: String!
+  isScheduled: Boolean!
+  cronScheduling: Cron
+  scheduleStatus: ScheduleStatus
+  scheduleTimezone: TimeZone
+  migrationStatus: MigrationStatus
+  sourcesMigration: [MigrationData]
+  targetMigration: MigrationData
+  # Indicates whether this pipeline version is a linear pipeline or not
+  isLegacyPipeline: Boolean
+  # Preview: use with precaution this field, it can be removed or changed in the future
+  allVersionsJobTechnologiesByCategory: [TechnologyByCategory]
+  movableState: PipelineMovableState
+}
+
+type MigrationData {
+  platformId: Int!
+  projectId: UUID!
+  migrationDate: DateTime!
+  pipelineId: UUID
+}
+
+type PipelineMovableState {
+  movable: Boolean!
+  reasons: [PipelineMovableStateError!]
+}
+
+type PipelineMovableStateError {
+    reason: PipelineMovableStateErrorReason!
+    offendingId: UUID
+    offendingName: String
+    sharedJobInManyPipelinesError: SharedJobInManyPipelines
+}
+
+type SharedJobInManyPipelines {
+  jobId: UUID!
+  jobName: String!
+  otherPipelinesLinked: [OtherPipelineWithSharedJob!]!
+}
+
+type OtherPipelineWithSharedJob {
+  pipelineId: UUID!
+  pipelineName: String!
+  pipelineVersions: [Int]!
+}
+
+type PipelineVersion {
+  number: Int!
+  releaseNote: String
+  # Set of jobs in a linear pipeline (soon deprecated) or graph pipeline
+  jobs: [Job!]
+  # Corresponds to the graph of jobs and conditions of a pipeline in graph format
+  # For a linear pipeline, it returns a graph corresponding to the list of jobs.
+  graph: PipelineGraph
+  creationDate: DateTime!
+  creator: String!
+  isCurrent: Boolean!
+  isMajor: Boolean!
+  deletableState: PipelineVersionDeletableState
+
+  # Version reference url (http or https) pushed only by API
+  sourceUrl: String
+}
+
+type PipelineVersionDeletableState {
+  deletable: Boolean!
+  reasons: [PipelineVersionDeletableStateReason!]
+}
+
+# Directed Acyclic Graph (DAG) of nodes of jobs and conditions of a pipeline in graph format
+type PipelineGraph {
+  # List of job nodes composing the graph of a pipeline
+  jobNodes: [JobNode!]
+  # List of condition nodes composing the graph of a pipeline
+  conditionNodes: [ConditionNode!]
+}
+
+# Graph node for a condition in a pipeline
+type ConditionNode {
+  id: UUID!
+  position: NodePosition
+  # List of output nodes of this node in case of success of the previous node
+  nextNodesSuccess: [UUID!]
+  # List of output nodes of this node in case of failure of the previous node
+  nextNodesFailure: [UUID!]
+
+  condition: Condition!
+}
+
+# Graph node for a job in a pipeline
+type JobNode {
+  id: UUID!
+  job: Job!
+  position: NodePosition
+  # List of output nodes of this node
+  nextNodes: [UUID!]
+}
+
+# Position of the node of a graph in the GUI
+type NodePosition {
+  x: Float!
+  y: Float!
+}
+
+interface Condition {
+  toString: String!
+}
+
+type ConditionStatus implements Condition {
+  toString: String!
+  value: ConditionStatusPresetValue!
+}
+
+enum ConditionStatusPresetValue {
+  AllSuccess
+  AllSuccessOrSkipped
+  AtLeastOneSuccess
+}
+
+type ConditionExpression implements Condition {
+  toString: String!
+  expression: String!
+}
+
+type PipelineInstance {
+  id: UUID!
+  number: Int!
+  status: InstanceStatus!
+  statusDetails: InstanceStatusDetails
+  jobsInstance(limit: Int, skip: Int): [JobInstance!]!
+  # Allows you to know if the condition is successful or not depending on the success of the previous node linked to this condition
+  #
+  # This field is null for a linear pipeline version and returns an empty list when graph doesn't have conditions.
+  conditionsInstance: [ConditionInstance]
+  nodeStatuses: [NodeStatus!]!
+  version: PipelineVersion!
+  # Initial execution variables set in pipeline to be using by jobs, structured by key. Note: value of password variables are not visible
+  initialExecutionVariables: [ExecutionVariable!]
+  runWithExecutionVariables: Boolean
+  startTime: DateTime!
+  endTime: DateTime
+  pipelineId: UUID
+  pipelineName: String
+  runTrigger: Trigger
+  stopTrigger: AuthoredTrigger
+  deletableState: PipelineInstanceDeletableState
+}
+
+type PipelineInstanceDeletableState {
+  deletable: Boolean!
+  reasons: [PipelineInstanceDeletableStateReason!]
+}
+
+type ExecutionVariable {
+  key: String!
+  value: String
+  isPassword: Boolean!
+}
+
+# The status of a node in a graph pipeline
+#
+# This type is currently in technical preview.
+type NodeStatus {
+  nodeId: UUID!
+  status: InstanceStatus!
+}
+
+# Allows you to know if the condition is successful or not depending on the success of the previous node linked to this condition
+#
+# This type is currently in technical preview.
+type ConditionInstance {
+  id: UUID
+  conditionNodeId: UUID!
+  # Set with `true` if previous node is in SUCCEEDED status ; `false` if previous is in FAILED status ; and otherwise null
+  isSuccess: Boolean
+  startTime: DateTime
+  endTime: DateTime
+  history: InstanceHistory!
+  # Execution variables input in the condition instance, by key. Note: value of password variables are not visible.
+  executionVariablesByKey: [ExecutionVariableByKeyVariable]
+}
+
+type DockerCredentials {
+  id: UUID!
+  registry: String
+  username: String!
+  lastUpdate: DateTime!
+  jobs: [Job!]
+  apps: [App!]
+}
+
+type UserEmail{
+  login: String
+  email: String!
+}
+
+type ClusterNodeCapacity{
+  cpu: Float!
+  gpu: Float!
+  memory: Float!
+}
+
+type ProjectReports {
+  countInstances: Long!
+  projects: [ProjectReport!]!
+}
+
+type ProjectReport {
+  id: UUID!
+  jobs: [JobReport!]!
+  name: String!
+  pipelines: [PipelineReport!]!
+}
+
+type JobReport {
+  id: UUID!
+  jobInstances: [JobInstanceReport!]!
+  name: String!
+}
+
+type JobInstanceReport {
+  id: UUID!
+  jobId: UUID!
+  name: String!
+  startTime: DateTime!
+  endTime: DateTime
+  status: InstanceStatus!
+}
+
+type PipelineReport {
+  id: UUID!
+  name: String!
+  pipelineInstances: [PipelineInstanceReport!]!
+}
+
+type PipelineInstanceReport {
+  endTime: DateTime
+  id: UUID!
+  jobInstances: [JobInstanceReport!]!
+  startTime: DateTime!
+  status: InstanceStatus!
+}
+
+input ConnectionInput {
+  projectId: UUID!,
+  repositoryId: UUID!,
+  connectionTypeId: String!,
+  name: String!,
+  parameters: [ConnectionParamValueInput!]!
+}
+
+input ConnectionEditionInput {
+  id: UUID!,
+  name: String!,
+  parameters: [ConnectionParamValueInput!]!
+}
+
+input ConnectionParamValueInput {
+  id: String!
+  value: String
+  isPassword: Boolean!
+}
+
+type Connection {
+  id: UUID!
+  projectId: UUID!,
+  name: String,
+  repositoryId: UUID!,
+  connectionTypeId: String!,
+  parameters: [ConnectionParamValue!]!,
+  creator: String!,
+  creationDate: DateTime,
+  lastUpdate: DateTime,
+  jobs: [Job!]
+}
+
+type ConnectionParamValue {
+  id: String!
+  value: String
+  isPassword: Boolean!
+}
+
+type ExtJobParamValueCallResult {
+  result: [ExtJobParamValue!]
+  error: String
+}
+
+type ExtJobParamValue {
+  id: String!
+  label: String!
+}
+
+type CheckConnectionCallResult {
+  result: CheckConnectionResult
+  error: String
+}
+
+type CheckConnectionResult {
+  ok: Boolean!
+  message: String
+}
+
+type Entry {
+  key: String!
+  value: String
+}
+
+type JobInstanceSelectorCount {
+  selector: JobInstanceSelector!
+  count: Int!
+}
+
+type PipelineInstanceSelectorCount {
+  selector: PipelineInstanceStatusSelector!
+  count: Int!
+}
+
+type DeletionResultItem {
+  id: UUID
+  success: Boolean
+}
+
+type DeletionVersionResultItem {
+  number: Int!
+  success: Boolean!
+}
+
+scalar Long
+
+scalar Upload
+
+scalar DateTime
+
+scalar Cron
+
+scalar UUID
+
+scalar Email
+
+# size with unit. If no unit is specified, The default unit is Byte
+scalar DataSize
+
+scalar TimeZone
+
+enum EnvVarScope {
+  GLOBAL
+  PROJECT
+  PIPELINE
+  # Value is deprecated : it will be removed in future releases
+  JOB
+  APP
+}
+
+enum StatusReason {
+  EVICTED
+  EVICTED_EXEC_VARS
+  CREATE_AGGREGATED_EXEC_VARS_ERROR
+  CONTAINER_CREATION_ERROR
+  IMAGE_PULL_ERROR
+  INVALID_IMAGE_NAME
+  OUT_OF_MEMORY
+  GENERIC_ERROR
+  WORKFLOW_DELETED
+  UNEXPECTED_DELETION
+}
+
+enum InstanceStatus {
+  AWAITING
+  REQUESTED
+  UNKNOWN
+  QUEUED
+  RUNNING
+  KILLING
+  KILLED
+  SUCCEEDED
+  FAILED
+  ERROR
+  SKIPPED
+}
+
+enum ProjectStatus {
+  CREATED
+  INIT_REQUESTED
+  INITIALIZING
+  FAILED
+  READY
+}
+
+enum ProjectRole {
+  ROLE_PROJECT_VIEWER,
+  ROLE_PROJECT_EDITOR,
+  ROLE_PROJECT_MANAGER
+}
+
+enum ScheduleStatus {
+  INITIALIZING
+  FAILED
+  READY
+  IMPOSSIBLE_TO_SCHEDULE
+}
+
+enum LogStream {
+  ENVVARS_STDOUT
+  ENVVARS_STDERR
+  ORCHESTRATION_STDOUT
+  ORCHESTRATION_STDERR
+  STDERR
+  STDOUT
+}
+
+enum MigrationStatus {
+  MIGRATING_IN
+  MIGRATING_OUT
+  READY
+  FAILED
+}
+
+enum DuplicationStatus {
+  DUPLICATION_OUT,
+  DUPLICATION_IN,
+  FAILED
+}
+
+enum ExpansionStatus {
+  EXPANSION_IN_PROGRESS
+  WAITING_FOR_LINK_TO_AN_APP
+}
+
+enum TriggerType {
+  MANUAL_JOB,
+  MANUAL_APP,
+  EXPAND_VOLUME,
+  CRON_JOB,
+  CRON_PIPELINE,
+  MANUAL_PIPELINE
+}
+
+enum JobInstanceSelector {
+  ALL,
+  SUCCEEDED,
+  FAILED,
+  STOPPED,
+  UNKNOWN
+}
+
+enum JobInstanceDeletableStateReason {
+  INSTANCE_NOT_TERMINATED,
+  INSTANCE_NOT_YET_CLEANED,
+  INSTANCE_LINKED_TO_PIPELINE,
+  INSTANCE_DOES_NOT_MATCH_JOB
+}
+
+enum JobVersionDeletableStateReason {
+  CURRENT_VERSION
+  VERSION_HAS_UNFINISHED_INSTANCES
+  VERSION_LINKED_TO_PIPELINE_INSTANCE
+  VERSION_INSTANCES_NOT_YET_CLEANED
+}
+
+enum JobDeletableStateReason {
+  HAS_UNFINISHED_INSTANCES
+  LINKED_TO_PIPELINE
+  INSTANCES_NOT_YET_CLEANED
+}
+
+enum JobAiGeneratedDescriptionStateReason {
+  FEATURE_DISABLED
+  FEATURE_DISABLED_ON_PLATFORM
+  TECHNOLOGY_CONTEXT_DISABLED
+  ALREADY_GENERATED
+  SOURCE_CODE_NOT_READABLE
+  CONTEXT_NOT_AVAILABLE
+}
+
+enum PipelineInstanceStatusSelector {
+  ALL,
+  SUCCEEDED,
+  FAILED,
+  STOPPED,
+  UNKNOWN
+}
+
+enum PipelineInstanceDeletableStateReason {
+  INSTANCE_NOT_TERMINATED,
+  INSTANCE_DOES_NOT_MATCH_PIPELINE,
+  INSTANCE_NOT_YET_CLEANED,
+  JOB_INSTANCES_NOT_TERMINATED,
+  JOB_INSTANCES_NOT_IN_PIPELINE
+}
+
+enum PipelineVersionDeletableStateReason {
+  CURRENT_VERSION
+  VERSION_HAS_UNFINISHED_INSTANCES
+  VERSION_INSTANCES_NOT_YET_CLEANED
+}
+
+enum PipelineMovableStateErrorReason {
+  PIPELINE_HAS_UNFINISHED_INSTANCES,
+  PIPELINE_HAS_INSTANCES_NOT_YET_CLEANED,
+  PIPELINE_ALREADY_IN_MIGRATION_STATE,
+  PIPELINE_SCHEDULED,
+  JOB_HAS_UNFINISHED_INSTANCES,
+  JOB_HAS_INSTANCES_NOT_YET_CLEANED,
+  JOB_ALREADY_IN_MIGRATION_STATE,
+  JOB_SCHEDULED,
+  JOBS_EXISTS_IN_MANY_PIPELINES
+}
+
