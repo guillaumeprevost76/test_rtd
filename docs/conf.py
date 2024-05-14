@@ -19,7 +19,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
-    "sphinx_rtd_theme",
+    # "sphinx_rtd_theme",
 ]
 
 intersphinx_mapping = {
@@ -33,9 +33,9 @@ templates_path = ["_templates"]
 # -- Options for HTML output
 
 html_title = "SaagieAPI"
-html_theme = "sphinx_rtd_theme"
-# html_theme = "sphinx_book_theme"
-# html_theme_options = {"show_toc_level": 2, "toc_title": "On this page"}
+# html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
+html_theme_options = {"show_toc_level": 2, "toc_title": "On this page"}
 
 # -- Options for EPUB output
 epub_show_urls = "footnote"
